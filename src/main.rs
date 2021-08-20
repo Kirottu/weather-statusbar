@@ -1,6 +1,30 @@
+use clap::{App, Arg};
 use serde_json::Value;
+
 #[tokio::main]
 async fn main() {
+    let matches = App::new("weather-statusbar")
+        .about("Weather info for use in a statusbar")
+        .arg(
+            Arg::with_name("amount")
+                .short("n")
+                .long("amount")
+                .help("Set the amount of weather data to display")
+                .required(false)
+                .default_value("3")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("time_offset")
+                .short("t")
+                .long("time_offset")
+                .help("Set the timezone offset from UTC")
+                .required(false)
+                .default_value("0")
+                .takes_value(true),
+        )
+        .get_matches();
+
     let client = reqwest::Client::builder()
         .user_agent("github.com/Kirottu/weather-statusbar kirottualt@gmail.com")
         .build()
@@ -17,8 +41,16 @@ async fn main() {
 
     let weather_json: Value = serde_json::from_str(&weather_string).unwrap();
 
-    let time_offset = 3;
-    let weather_snapshot_amount = 5;
+    let time_offset = matches
+        .value_of("time_offset")
+        .unwrap()
+        .parse::<i32>()
+        .unwrap();
+    let weather_snapshot_amount = matches
+        .value_of("amount")
+        .unwrap()
+        .parse::<usize>()
+        .unwrap();
 
     let temp_symbol = "🌡️";
     let wind_symbol = "💨";
